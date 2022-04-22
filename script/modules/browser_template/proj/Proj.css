@@ -1,0 +1,147 @@
+body {
+/*	background-color: #232323;*/
+	margin: 0;
+	font-family: "Century Gothic", "Montserrat", "Avenir";
+}
+
+h1 {
+	text-align: center;
+	line-height: 1.1;
+	font-weight: normal;
+	color: white;
+/*	background: #9dc209;*/
+	background: #A04000;
+	margin: 0;
+	text-transform: uppercase;
+	padding: 20px 0;
+}
+
+#stripe {
+	background: #F6DDCC;
+	height: 30px;
+	text-align: center;
+	color: black;
+}
+
+button {
+	border: none;
+	background: none;
+	text-transform: uppercase;
+	height: 100%;
+	min-width: 100px;
+	font-weight: 700;
+	color: #A04000;
+	letter-spacing: 1px;
+	font-size: inherit;
+	transition: all 0.3s;
+	-webkit-transition: all 0.3s;
+	-moz-transition: all 0.3s;
+	outline: none;
+}
+
+button:hover {
+	color: white;
+	background: #A04000;
+}
+
+.selected {
+	color: white;
+	background: #A04000;
+}
+
+.tab {
+	width: 90%;
+	margin: 40px auto;
+}
+
+#home {
+	width: 90%;
+	margin: auto;
+	font-size: 80%;
+}
+
+/*.processed_data {
+	width: 80%;
+	margin: 40px auto;
+}
+*/
+#mapid {
+	margin: 40px auto;
+	height: 800px;
+	width: 100%;
+}
+
+table#noline th {
+    border: 1px solid white;
+    border-collapse: collapse;
+}
+table#noline td {
+    border: 1px solid white;
+    border-collapse: collapse;
+}
+
+
+table#striped tr:nth-child(even) {
+    background-color: #F2F5F0;
+}
+table#striped tr:nth-child(odd) {
+   background-color: #FCFCFB;
+}
+table#striped th {
+    background-color: #658254;
+    color: white;
+}
+table#striped {
+	width: 80%;
+	text-align: center;
+}
+
+
+/*CSS for photos*/
+div.gallery {
+  margin: 5px;
+  border: 1px solid #ccc;
+  float: left;
+  width: 45%;
+  height: 45%;
+}
+
+div.gallery:hover {
+  border: 1px solid #777;
+}
+
+div.gallery img {
+  width: 100%;
+  height: auto;
+}
+
+div.desc {
+  padding: 15px;
+  text-align: center;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 105%;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
