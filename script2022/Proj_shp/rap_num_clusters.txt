@@ -1,0 +1,10 @@
+def get_NumCluster(area_ha):
+  if area_ha > 60.0:
+    num_cluster = round(30 + area_ha/2, 0)
+  elif area_ha > 30.0:
+    num_cluster = round(area_ha ,0)
+  elif area_ha > 8.0:
+    num_cluster = 30
+  else:
+    num_cluster = 0
+  return num_cluster

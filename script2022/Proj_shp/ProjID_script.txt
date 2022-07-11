@@ -1,0 +1,7 @@
+def projid(dist,orig_projid):
+  new_projid = "%s-%s"%(dist[:3].upper(), orig_projid.upper())
+  new_projid = new_projid.replace(' ','-')
+  return new_projid
+
+
+projid( !District!, !ORG_ProjectID!)

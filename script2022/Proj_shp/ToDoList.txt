@@ -1,0 +1,11 @@
+Once the boundary gdb arrives, these are things I need to do:
+
+- skim through the gdb and make sure mandatory fields are populated:
+	- ProjectID, NumClusters, FMU, District, TargetSpc
+- append the data to the RAP_2022_05 (where all the other boundary gdbs were merged)
+- clean up the ProjectID values. All Caps, no spaces, with district name prefix.
+	- this can be done using ProjID_script.txt
+- recalculate Area_Ha
+- run the Create RAP Survey Cluster Tool
+- check and send the clusters to the foresters
+- put the new projectids into the Terraflex form
