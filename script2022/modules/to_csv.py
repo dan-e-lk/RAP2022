@@ -111,6 +111,7 @@ class To_csv:
 			lon = proj_summary_record['lon']
 			area = proj_summary_record['area_ha']
 			silvsys = proj_summary_record[self.proj_summary_attr['p_silvsys']]
+			plot_size = proj_summary_record[self.proj_summary_attr['p_plot_size']]
 			num_clus_total = proj_summary_record[self.proj_summary_attr['p_num_clus']]
 			num_clusters_surveyed = proj_summary_record[self.proj_summary_attr['p_num_clus_surv']]
 			survey_startdate = proj_summary_record[self.proj_summary_attr['p_assess_start_date']]
@@ -140,6 +141,8 @@ class To_csv:
 					writer.writerow(['Project location (lat, long): %s, %s'%(lat,lon)])
 					writer.writerow(['Project Area: %sha'%area])
 					writer.writerow(['Silvicultural System: %s'%silvsys])
+					writer.writerow(['Plot Size (sqm): %s'%plot_size])
+					writer.writerow(['  *By default, plot size is 8 sqm for CC, and 8 sqm & 16 sqm for SH, unless otherwise stated above'])					
 					writer.writerow(['Clustered surveyed: %s of %s'%(num_clusters_surveyed, num_clus_total)])					
 					writer.writerow(['Survey Period: %s to %s'%(survey_startdate, survey_lastdate)])
 					writer.writerow(['Surveyors: %s'%surveyors])
@@ -235,7 +238,6 @@ class To_csv:
 					writer = csv.writer(f, lineterminator='\n')
 					writer.writerow(['<Site Occupancy>'])
 					writer.writerow(attr)
-					rows = []
 					for clus in lst_of_clus: # do this loop to make sure records are sorted.
 						for record in data:
 							row = [v for k,v in record.items() if k in attr] # we just need cluster number, number of trees and effective density.
@@ -261,27 +263,48 @@ class To_csv:
 				with open(csvfilename,'a') as f:
 					writer = csv.writer(f, lineterminator='\n')
 					writer.writerow(['<EFFECTIVE DENSITY>'])
+					if silvsys == 'SH':
+						writer.writerow(['Note that there are two ED numbers for Shelterwood: ED of trees < 6m, and ED of trees >6m'])
 					writer.writerow(attr)
-					rows = []
 					for clus in lst_of_clus: # do this loop to make sure records are sorted.
 						for record in data:
 							row = [v for k,v in record.items() if k in attr] # we just need cluster number, number of trees and effective density.
 							if row[0] == clus: 
+								# effective density is in the format of [1406.25, 351.0]. We need to fix this
+								if silvsys == 'SH':
+									row.append(eval(row[2])[1]) #eg. 351.0
+								row[2] = eval(row[2])[0] #eg. 1406.25	
 								writer.writerow(row)
 								break
 					writer.writerow('') # skip one line
 
 				# Number of trees and effective density calculated result:
 				if len(set(lst_of_clus)) > 2:
-					proj_data = [record for record in self.proj_summary_dict if record['proj_id']==p]
+					proj_data = [record for record in self.proj_summary_dict if record['proj_id']==p]  # this list should contain just one record
 					p_effect_dens_attr = self.proj_summary_attr['p_effect_dens'] # should give you 'effective_density'
 					results = proj_data[0][p_effect_dens_attr] # eg. {'mean': 1979.1667, 'stdv': 1271.9428, 'ci': 1334.8221, 'upper_ci': 3313.9888, 'lower_ci': 644.3446, 'n': 6, 'confidence': 0.95}
 					with open(csvfilename,'a') as f:
 						writer = csv.writer(f, lineterminator='\n')
+						writer.writerow(["Total Effective Density:"])
 						writer.writerow(eval(results).keys())
 						writer.writerow(eval(results).values())
 						writer.writerow('')
 
+					if silvsys == 'SH':
+						p_effect_dens_8m2_attr = self.proj_summary_attr['p_effect_dens_8m2']
+						p_effect_dens_16m2_attr = self.proj_summary_attr['p_effect_dens_16m2']
+						results_8m2 = proj_data[0][p_effect_dens_8m2_attr]
+						results_16m2 = proj_data[0][p_effect_dens_16m2_attr]
+						with open(csvfilename,'a') as f:
+							writer = csv.writer(f, lineterminator='\n')
+							writer.writerow(["Effective Density of trees < 6m tall in 8 sqm plots:"])
+							writer.writerow(eval(results_8m2).keys())
+							writer.writerow(eval(results_8m2).values())
+							writer.writerow('')
+							writer.writerow(["Effective Density of trees > 6m tall in 16 sqm plots:"])
+							writer.writerow(eval(results_16m2).keys())
+							writer.writerow(eval(results_16m2).values())
+							writer.writerow('')
 
 
 			# Ecosite

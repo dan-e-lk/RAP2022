@@ -1,4 +1,4 @@
-version = '2022.04'
+version = '2022.07'
 
 
 import sys, os, pprint, traceback, shutil
@@ -31,6 +31,7 @@ def RAP(configfilepath, initial_msg, custom_datapath = None, ignore_testdata = T
 
 	logger = log.logger(logfile, debug)
 	logger.info('\n\n############## ## #  Launching RAP program  # ## ##################')
+	logger.info('\n Hint: Search for "!!!!" for error or warning messages.')
 	logger.info('Time: %s'%timenow)
 	logger.info('version %s'%version)
 	logger.info(initial_msg)

@@ -238,7 +238,9 @@ class To_browsers:
 			proj_surveyed = proj_info_dict['Clusters Surveyed'] # eg. '9 of 30'
 			proj_latlon = '%s, %s'%(proj_info_dict['lat'], proj_info_dict['lon']) # eg. '48.49337, -81.34618'
 			proj_area = proj_sum_dict['area_ha']
+			proj_silvsys = proj_sum_dict['silvsys']
 			proj_sgr = proj_sum_dict['SGR']
+
 			proj_start_date = proj_sum_dict['assess_start_date']
 			proj_last_date = proj_info_dict['Last Survey Date']
 			proj_assessors = proj_sum_dict['assessors']
@@ -263,12 +265,21 @@ class To_browsers:
 			html = """\n\n<table id="noline">
 			<tr><td><strong>Project ID:</strong></td> 					<td>{0}</td></tr>
 			<tr><td><strong>Project Location:</strong></td> 			<td>{1} (Area: {2}ha)</td></tr>
-			<tr><td><strong>SGR:</strong></td> 							<td>{3}</td></tr>
-			<tr><td><strong>Clusters Surveyed:</strong></td> 			<td>{4}</td></tr>
-			<tr><td><strong>Dates Surveyed:</strong></td> 				<td>{5} to {6}</td></tr>
-			<tr><td><strong>Surveyed by:</strong></td> 					<td>{7}</td></tr>
-			<tr><td><strong>Details: </strong></td>					<td>{8}</td></tr>
-			</table>\n""".format(proj, proj_latlon, proj_area, proj_sgr, proj_surveyed, proj_start_date, proj_last_date, proj_assessors, proj_detail)
+			<tr><td><strong>Silviculture Sys.:</strong></td> 			<td>{3}</td></tr>
+			<tr><td><strong>SGR:</strong></td> 							<td>{4}</td></tr>
+			<tr><td><strong>Clusters Surveyed:</strong></td> 			<td>{5}</td></tr>
+			<tr><td><strong>Dates Surveyed:</strong></td> 				<td>{6} to {7}</td></tr>
+			<tr><td><strong>Surveyed by:</strong></td> 					<td>{8}</td></tr>
+			<tr><td><strong>Details: </strong></td>						<td>{9}</td></tr>
+			</table>\n""".format(proj, proj_latlon, proj_area, proj_silvsys, proj_sgr, proj_surveyed, proj_start_date, proj_last_date, proj_assessors, proj_detail)
+
+			# for custom plot sizes
+			proj_plot_size = eval(proj_sum_dict['plot_size_m2']) # can be ['default'], [8, 16] or [4]
+			if proj_plot_size in [['default'], [8, 16], []]:
+				plotsize_html = "(Default plot size used. Default is 8sqm for CC and 8sqm & 16sqm for SH.)"
+			else:
+				plotsize_html = "<strong>NOTE: Custom plot size(s) used - %ssqm</strong>"%proj_plot_size
+			html += plotsize_html
 
 			# SFL's data
 			sfl_as_yr = str(proj_sum_dict['sfl_as_yr'])
@@ -316,6 +327,12 @@ class To_browsers:
 			so = eval(proj_sum_dict['site_occupancy']) # eg. {'mean': 0.7708, 'stdv': 0.3826, 'ci': 0.4015, 'upper_ci': 1.1723, 'lower_ci': 0.3693, 'n': 6, 'confidence': 0.95}
 			ed = eval(proj_sum_dict['effective_density']) # eg. {'mean': 1979.1667, 'stdv': 1271.9428, ...}
 			html += so_ed_to_html_table(so,ed, "MNRF Site Occupancy and Effective Density")[1]
+
+			# Extra ED table - for SH only
+			if proj_silvsys == 'SH':
+				ed_8m2 = eval(proj_sum_dict['effective_density_8m2']) # eg. {'mean': 1287.576, 'stdv': 1271.9428, ...}
+				ed_16m2 = eval(proj_sum_dict['effective_density_16m2']) # eg. {'mean': 644.45, 'stdv': 1271.9428, ...}
+				html += sh_ed_to_html_table(ed_8m2, ed_16m2, "MNRF Effective Density - Breakdown by Tree Height")
 
 			# Unoccupied reason summary
 			unocc_sum = eval(proj_sum_dict['site_occupancy_reason_summary']) # eg. {'Road': 2.2, 'Shrubs': 26.37, 'Not FTG': 6.59, ... 'Treed': 54.95}
@@ -594,6 +611,44 @@ def so_ed_to_html_table(so, ed, title):
 			html += "</tr>\n"
 		html += "</table><br>\n"
 	return [enough_data, html]
+
+
+# for SH only:
+def sh_ed_to_html_table(ed_8m2, ed_16m2, title):
+	""" For shelterwood sites, there are two effective densities: 
+	small trees surveyed using 8m2 plot, and larger (>6m) trees surveyed using 16m2 plot
+	Their EDs must also be in the following format:
+	{'mean': 1043.5268, 'stdv': 719.245, 'ci': 278.8941, 'upper_ci': 1322.4209, 'lower_ci': 764.6327, 'n': 28, 'confidence': 0.95}
+	"""
+	html = ''
+	header = ['', 'ED of trees less than 6m', 'ED of trees greater than 6m']
+	rows = ed_8m2.keys() # ['mean','stdv','ci','upper_ci',...]
+	html += """\n<br><br>
+		<table id="striped">
+			<caption><strong>%s</strong>
+			</caption>
+		<tr>\n"""%title
+
+	# first, we write the header
+	for head in header:
+		html += "<th>%s</th>"%head
+	html += "</tr>\n"
+
+	# write each row
+	for row in rows:
+		html += "<tr>"
+		for column in header:
+			if column == '':
+				html += "<td><strong>%s</strong></td>"%row # eg. "mean"
+			elif column == 'ED of trees less than 6m':
+				val = ed_8m2[row]
+				html += "<td>%s</td>"%val
+			elif column == 'ED of trees greater than 6m':
+				val = ed_16m2[row]
+				html += "<td>%s</td>"%val					
+		html += "</tr>\n"
+	html += "</table><br>\n"
+	return html
 
 
 def res_to_html_table(res_count, res_percent, res_BA, title = "MNRF Residuals"):

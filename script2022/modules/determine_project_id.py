@@ -334,6 +334,12 @@ class Determine_project_id:
 			for proj_id, occurrence in proj_id_not_in_shp.items():
 				if occurrence > 0:
 					self.logger.info("!!!! Invalid Project ID: %s,  Occurrence: %s !!!!"%(proj_id, occurrence))
+			self.logger.info("!!!! This happens when both of these statements are true:")
+			self.logger.info(" 1. The project IDs of these clusters don't match with the project IDs of the shapefile")
+			self.logger.info(" 2. The location of these clusters are outside of project boundaries of the shapefile")
+			self.logger.info(" To resolve these issues you must log in to Terraflex inSphere and locate those clusters manually")
+			self.logger.info(" If these clusters have wrong project ID, you can edit those records (use Project ID Manual Override field)")
+			self.logger.info(" It's also possible that your shapefile doesn't have that project ID shape, in which case you must update your shapefile")
 
 
 

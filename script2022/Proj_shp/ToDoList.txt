@@ -6,6 +6,8 @@ Once the boundary gdb arrives, these are things I need to do:
 - clean up the ProjectID values. All Caps, no spaces, with district name prefix.
 	- this can be done using ProjID_script.txt
 - recalculate Area_Ha
+- calculate lat lon
+- Export as shapefile (RAP_2022_07.shp)
 - run the Create RAP Survey Cluster Tool
 - check and send the clusters to the foresters
 - put the new projectids into the Terraflex form

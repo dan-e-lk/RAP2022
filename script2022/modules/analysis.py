@@ -24,8 +24,8 @@ class Run_analysis:
 		self.max_num_of_t_per_sqm = float(cfg_dict['CALC']['max_num_of_t_per_sqm']) # 0.5 
 		# self.calc_max = int(cfg_dict['CALC']['num_of_trees_4_spcomp'])
 		self.num_of_plots = int(cfg_dict['CALC']['num_of_plots'])
-		self.clearcut_plot_area = 8 # sq m
-		self.shelterwood_plot_area = 16 # sq m
+		# self.clearcut_plot_area = 8 # sq m
+		# self.shelterwood_plot_area = 16 # sq m
 		self.db_filepath = db_filepath
 		self.prj_shp_tbl_name = cfg_dict['SHP']['shp2sqlite_tablename'] # the name of the existing sqlite table that is a copy of project boundary shpfile.
 		self.prj_shp_prjid_fieldname = cfg_dict['SHP']['project_id_fieldname'].upper()
@@ -92,10 +92,11 @@ class Run_analysis:
 		self.c_proj_id = 'proj_id' # DO NOT CHANGE THIS!!!
 		self.c_creation_date = 'creation_date'
 		self.c_silvsys = 'silvsys' # CC or SH as collected
+		self.c_plot_size = 'plot_size'
 
 		self.c_spc_count = 'spc_count' # eg. {'P1':[{'BW':2, 'SW':1}, {}], 'P2': None, 'P3': [{'SW': 1}, {'SW': 2}],...}
 		self.c_num_trees = 'total_num_trees' # total number of VALID trees collected eg. 11.
-		self.c_eff_dens = 'effective_density' # number of trees per hectare. (total number of trees in a cluster*10000/(8plots * 8m2)) eg. 1718.75
+		self.c_eff_dens = 'effective_density' # number of trees per hectare. New in 2022: two values: [eff_dens_8m2 (or CC at custom plot size), eff_dens_16m2] eg. [2033, 0]
 		self.c_invalid_spc_code = 'invalid_spc_codes' # list of invalid species codes entered by the field staff. eg. [[], [], [], ['--'], [], [], []]
 		self.c_site_occ_raw = 'site_occ_data' # 0 if unoccupied. 1 if occupied. eg. {'P1': 1, 'P2': 1, 'P3': 1, 'P4': 1, 'P5': 1, 'P6': 1, 'P7': 1, 'P8': 0}
 		self.c_site_occ = 'site_occ' # number of occupied plots divided by 8. eg 0.875
@@ -153,8 +154,10 @@ class Run_analysis:
 		self.p_dist = 'surveyor_MNRF_district' # derived from the survey form
 		self.p_comments = 'all_comments' # all comments combined
 
-		self.p_effect_dens_data = 'effective_density_data' # eff density, raw data in dict. eg. {'109': 1225, '108': 1375,...}
+		self.p_effect_dens_data = 'effective_density_data' # eff density, raw data in dict. eg. {'109': [1225,0], '108': [1375,0],...}
 		self.p_effect_dens = 'effective_density' # 'mean', 'stdv', 'ci', 'upper_ci', 'lower_ci', 'n' values of effective density of any trees whether it's got a valid tree code or not.
+		self.p_effect_dens_8m2 = 'effective_density_8m2' # SH only. ED of trees <6m at 8m2 plot
+		self.p_effect_dens_16m2 = 'effective_density_16m2'# SH only. ED of trees >6m at 16m2 plot
 		self.p_num_cl_occupied = 'num_clusters_occupied' # this is the n for species calculation
 		self.p_so_data = 'site_occupancy_data'
 		self.p_so = 'site_occupancy' # 'mean', 'stdv', 'ci', 'upper_ci', 'lower_ci', 'n' values of the site occupancy
@@ -207,7 +210,15 @@ class Run_analysis:
 				record[self.c_lon] = cluster['longitude']
 				record[self.c_creation_date] = cluster['CreationDateTime'][:10] # eg. '2021-09-09'
 				record[self.c_silvsys] = silvsys # 'CC' or 'SH'
-
+				if silvsys == 'CC':
+					ps = cluster['PlotSize']
+					if ps == '4 sqm':
+						c_plot_size = 4
+					else:
+						c_plot_size = 'default'
+				else:
+					c_plot_size = 'default'
+				record[self.c_plot_size] = c_plot_size
 
 				c_site_occ_raw = {} # {'P1':1, 'P2':0, ...} 1 if occupied, 0 if unoccupied
 				site_occ = self.num_of_plots  # eg. 8.  Starts with total number of plots and as we find unoccup plots, deduct 1.
@@ -252,10 +263,10 @@ class Run_analysis:
 						if silvsys == 'CC':
 							# Species1SpeciesNamePlot1 ~ Species4SpeciesNamePlot8  # up to 4 species, 8 plots
 							# Species1NumberofTreesPlot1 ~ Species4NumberofTreesPlot8 # x number of trees per species
-							# loop through 1-4
+							# loop through 1-4 # this has changed to loop through 1-6 on Aug 2022.
 							spc_dict_8m2 = {} # eg. {'BW':2, 'SW':1}
 							spc_dict_16m2 = {} # only for sh
-							for spc_num in range(1,5):
+							for spc_num in range(1,7):
 								spc_name = cluster['Species'+str(spc_num)+'SpeciesNamePlot'+plotnum] # eg. 'Bf (fir, balsam)' or ''
 								if len(spc_name) >= 2:
 									spc_name = spc_name + ' ' # some species codes are 3 letters, so this is necessary
@@ -348,11 +359,13 @@ class Run_analysis:
 				# for example, a cluster where 14 trees are found in 8m2, and 6 trees in 16m2,
 				# ED = '14trees'x 10000/('8m2'x'8plots') + '6trees'x 10000/('16m2'x'8plots') = 2187.5 + 468.75 = 2656.25
 				tree_count_8m2 = 0
-				tree_count_16m2 = 0
+				tree_count_16m2 = 0 # This should always be zero for CC sites
+				tree_count_custom = 0 # Applied to CC sites only when plot size is other than 8m2
 				for plot_num, spc_info in c_spc_count.items():
 					if spc_info != None:
 						for spc8m2, count8m2 in spc_info[0].items():
 							tree_count_8m2 += count8m2
+							tree_count_custom += count8m2
 						for spc16m2, count16m2 in spc_info[1].items():
 							tree_count_16m2 += count16m2
 				# number of trees for each cluster shouldn't exceed the limit
@@ -361,8 +374,20 @@ class Run_analysis:
 				tree_count_max_16m2 = 16*8*self.max_num_of_t_per_sqm
 				if tree_count_8m2 > tree_count_max_8m2: tree_count_8m2 = tree_count_max_8m2
 				if tree_count_16m2 > tree_count_max_16m2: tree_count_16m2 = tree_count_max_16m2
+				# do the same for the custom plot size
+				if c_plot_size != 'default':
+					tree_count_max_custom = c_plot_size*8*self.max_num_of_t_per_sqm
+					if tree_count_custom > tree_count_max_custom: tree_count_custom = tree_count_max_custom
+
 				# Calculate Effective Density
-				c_eff_dens = (tree_count_8m2*10000/(8*8)) + (tree_count_16m2*10000/(16*8))
+				eff_dens_8m2 = tree_count_8m2*10000/(8*8)
+				eff_dens_16m2 = tree_count_16m2*10000/(16*8)
+				c_eff_dens =  [eff_dens_8m2, eff_dens_16m2]
+				# do the same for the custom plot size. Note that the custom size option is available only in CC.
+				if c_plot_size != 'default':
+					eff_dens_custom = tree_count_16m2*10000/(c_plot_size*8)
+					c_eff_dens = [eff_dens_custom,0]
+
 				self.logger.debug("c_eff_dens = %s"%(c_eff_dens))
 
 				# Site Occupancy
@@ -565,7 +590,6 @@ class Run_analysis:
 			record[self.p_num_clus] = prj['NUMCLUSTER']
 			record[self.p_silvsys] = prj['SILVSYS']
 			record[self.p_area] = prj['AREA_HA']
-			record[self.p_plot_size] = 16 if prj['SILVSYS'] =='SH' else 8
 			record[self.p_spatial_fmu] = prj['FMU']
 			record[self.p_spatial_dist] = prj['DISTRICT']
 			record[self.p_lat] = prj['LAT']
@@ -630,6 +654,17 @@ class Run_analysis:
 			record[self.p_assess_start_date] = assess_start_date
 			record[self.p_assess_last_date] = assess_last_date
 
+			# Plot Size
+			if prj['SILVSYS'] =='SH':
+				record[self.p_plot_size] = [8, 16]
+			else:
+				clus_plot_size_all = [] # eg. [4, 4, 'default', 4, ....] but it should be just one size
+				for cluster in cluster_data_of_this_proj:
+					clus_plot_size_all.append(cluster[self.c_plot_size])
+				clus_plot_size = list(set(clus_plot_size_all)) # eg. [4]
+				record[self.p_plot_size] = clus_plot_size
+				if len(clus_plot_size) > 1:
+					self.logger.info("\n!!!! More than one plot sizes in ProjID = %s.  %s\n"%(proj_id, clus_plot_size))
 
 			# Assessors (surveyors), Surveyor's FMU, Surveyor's District
 			# These information is available not in the cluster summary but in the raw data (cc_cluster_in_dict)
@@ -655,14 +690,22 @@ class Run_analysis:
 				comments[cluster['cluster_number']] = cluster[self.c_comments]
 			record[self.p_comments] = comments # eg. {'456': {'cluster': '', 'ecosite': '', 'P1': '',...}
 
-			# Effective density data eg. {'109': 1225, '108': 1375,...}
+			# Effective density data eg. {'109': [1225,0], '108': [1375,0],...} 
 			effective_density_data = {}
 			for cluster in cluster_data_of_this_proj:
 				effective_density_data[cluster['cluster_number']] = cluster[self.c_eff_dens]
+			# ED total, ED at 8m2, ED at 16m2
+			effective_density_data_total = {k:(v[0]+v[1]) for k,v in effective_density_data.items()} # eg. {'109': 1225, '108': 1375,...} 
+			effective_density_data_8m2 = {k:v[0] for k,v in effective_density_data.items()}
+			effective_density_data_16m2 = {k:v[1] for k,v in effective_density_data.items()}
 			# Effective density # eg. {'mean': 1979.1667, 'stdv': 1271.9428, 'ci': 1334.8221, 'upper_ci': 3313.9888, 'lower_ci': 644.3446, 'n': 6, 'confidence': 0.95}
-			effective_density = mymath.mean_std_ci(effective_density_data) 
+			effective_density_total = mymath.mean_std_ci(effective_density_data_total)
+			effective_density_8m2 = mymath.mean_std_ci(effective_density_data_8m2)
+			effective_density_16m2 = mymath.mean_std_ci(effective_density_data_16m2)
 			record[self.p_effect_dens_data] = effective_density_data
-			record[self.p_effect_dens] = effective_density
+			record[self.p_effect_dens] = effective_density_total
+			record[self.p_effect_dens_8m2] = effective_density_8m2
+			record[self.p_effect_dens_16m2] = effective_density_16m2
 
 			# number of clusters where at least 1 plot is occupied with trees # this should be the n for species calculation
 			lst_of_occupied_clus = []
@@ -820,6 +863,8 @@ class Run_analysis:
 							plot_record[spc_code+'_'+plotsize] = spc_count
 					self.plot_summary_dict_lst_sh.append(plot_record)
 				else:
+					p_size = clus_record[self.c_plot_size]
+					plot_record['plot_size'] = 8 if p_size == 'default' else p_size
 					for spc_code in all_spc_codes_from_raw_data:
 						spc_count = clus_record[self.c_spc_count] # eg {'P1': [{'PL': 1, 'MR': 1}, {}], 'P2': None,...}
 						try:
@@ -829,7 +874,6 @@ class Run_analysis:
 						plot_record['_'+spc_code] = spc_count
 
 					self.plot_summary_dict_lst_cc.append(plot_record)
-
 
 		# create the table on the sqlite database
 		self.plotcount_cc_sh = {'CC': len(self.plot_summary_dict_lst_cc), 'SH':len(self.plot_summary_dict_lst_sh)}

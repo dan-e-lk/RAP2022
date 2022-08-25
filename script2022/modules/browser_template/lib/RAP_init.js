@@ -28,7 +28,7 @@ $("#docmenu").on("click", function(){
 
 
 //Leaflet codes
-var mymap = L.map('mapid', {scrollWheelZoom: false}).setView([47.85, -81.7241], 7);
+var mymap = L.map('mapid', {scrollWheelZoom: false}).setView([47.85, -81.7241], 6);
 
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
 	maxZoom: 18,
