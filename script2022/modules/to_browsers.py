@@ -146,8 +146,26 @@ class To_browsers:
 		# append the js script
 		js_script = "\n//markers for each project\n"
 		for proj in self.dash_table:
-			js_script += """L.marker([%s, %s]).addTo(mymap).bindPopup('<strong>%s</strong><br>Surveyed: %s<br>%sha');"""%(
-						proj['lat'],proj['lon'],proj['Project ID'],proj['Clusters Surveyed'],proj['Area ha'])
+			# new in 2022. different icon colour based on the progress
+			# Red if the survey has not started, yellow if survey has started, green if over 90% complete.
+			splitword = ' of '
+			progress = proj['Clusters Surveyed'].split(splitword) # ['24','33']
+			completed_c = int(progress[0])
+			total_c = int(progress[1])
+			if total_c != 0:
+				progress_ratio = float(completed_c)/total_c
+			else:
+				progress_ratio = 0
+
+			if progress_ratio == 0:
+				icon_colour = "{icon: redIcon}"
+			elif progress_ratio < 0.9:
+				icon_colour = "{icon: goldIcon}"
+			else:
+				icon_colour = "{icon: greenIcon}"
+
+			js_script += """L.marker([%s, %s], %s).addTo(mymap).bindPopup('<strong>%s</strong><br>Surveyed: %s<br>%sha');"""%(
+						proj['lat'],proj['lon'],icon_colour,proj['Project ID'],proj['Clusters Surveyed'],proj['Area ha'])
 			js_script += "\n"
 
 		# replace the project id with an anchor tag.
@@ -207,12 +225,13 @@ class To_browsers:
 				if clus_lon == '': clus_lon = 0
 
 				proj_clus_name = clus_summary['proj_id'] + '-' + clus_summary['cluster_number']
+				clus_num = clus_summary['cluster_number']
 				so = clus_summary['site_occ']
 				spc_comp = clus_summary['spc_comp_perc'].replace("'","")
 				date = clus_summary['creation_date']
 
-				js_script += """L.marker([%s, %s]).addTo(mymap).bindPopup('<strong>%s</strong><br>Site Occ: %s<br>SPCOMP: %s<br>Date: %s');"""%(
-							clus_lat, clus_lon, proj_clus_name, so, spc_comp, date)
+				js_script += """L.marker([%s, %s]).addTo(mymap).bindTooltip('%s',{permanent: true, opacity: 0.6, direction: 'right'}).bindPopup('<strong>%s</strong><br>Site Occ: %s<br>SPCOMP: %s<br>Date: %s');"""%(
+							clus_lat, clus_lon, clus_num, proj_clus_name, so, spc_comp, date)
 				js_script += "\n"
 
 			with open(self.p_jsfile,'a') as f:

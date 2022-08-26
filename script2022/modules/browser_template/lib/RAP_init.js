@@ -40,8 +40,30 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 	zoomOffset: -1
 }).addTo(mymap);
 
-/*L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-	maxZoom: 20,
-	attribution: 'Google © <a href="https://www.google.com/maps">Google Maps</a>',
-	subdomains:['mt0','mt1','mt2','mt3']
-}).addTo(mymap);*/
+var greenIcon = new L.Icon({
+  iconUrl: 'lib/marker-icon-2x-green.png',
+  shadowUrl: 'lib/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var goldIcon = new L.Icon({
+  iconUrl: 'lib/marker-icon-2x-gold.png',
+  shadowUrl: 'lib/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var redIcon = new L.Icon({
+  iconUrl: 'lib/marker-icon-2x-red.png',
+  shadowUrl: 'lib/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
