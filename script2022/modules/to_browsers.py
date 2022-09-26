@@ -230,8 +230,15 @@ class To_browsers:
 				spc_comp = clus_summary['spc_comp_perc'].replace("'","")
 				date = clus_summary['creation_date']
 
-				js_script += """L.marker([%s, %s]).addTo(mymap).bindTooltip('%s',{permanent: true, opacity: 0.6, direction: 'right'}).bindPopup('<strong>%s</strong><br>Site Occ: %s<br>SPCOMP: %s<br>Date: %s');"""%(
-							clus_lat, clus_lon, clus_num, proj_clus_name, so, spc_comp, date)
+
+				js_script += """L.marker([%s, %s]).addTo(mymap).bindPopup('<strong>%s</strong><br>Site Occ: %s<br>SPCOMP: %s<br>Date: %s');"""%(
+							clus_lat, clus_lon, proj_clus_name, so, spc_comp, date)
+				
+				# the following script will enable display of cluster numbers
+				# but it slows down browser speed significantly, so I am disabling it
+				# js_script += """L.marker([%s, %s]).addTo(mymap).bindTooltip('%s',{permanent: true, opacity: 0.6, direction: 'right'}).bindPopup('<strong>%s</strong><br>Site Occ: %s<br>SPCOMP: %s<br>Date: %s');"""%(
+				# 			clus_lat, clus_lon, clus_num, proj_clus_name, so, spc_comp, date)
+				
 				js_script += "\n"
 
 			with open(self.p_jsfile,'a') as f:
