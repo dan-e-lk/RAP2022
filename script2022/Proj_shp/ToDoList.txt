@@ -1,4 +1,5 @@
 Once the boundary gdb arrives, these are things I need to do:
+Use WGS 1984!
 
 - skim through the gdb and make sure mandatory fields are populated:
 	- ProjectID, NumClusters, FMU, District, TargetSpc
@@ -7,7 +8,7 @@ Once the boundary gdb arrives, these are things I need to do:
 	- this can be done using ProjID_script.txt
 - recalculate Area_Ha
 - calculate lat lon
-- Export as shapefile (RAP_2022_07.shp)
+- Export as shapefile (RAP_2022_07.shp) Use WGS 1984 as the spatial reference (Don't export the test ones)
 - run the Create RAP Survey Cluster Tool
 - check and send the clusters to the foresters
 - put the new projectids into the Terraflex form

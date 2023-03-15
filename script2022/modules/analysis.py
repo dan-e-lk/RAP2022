@@ -232,7 +232,8 @@ class Run_analysis:
 				# c_spc = [] # selected VALID tallestest trees for each plot will be appended to this list e.g. [[['Bf', 5.0], ['Sw', 2.0], ['Sw', 2.0]], [['La', 3.0]], [['Sw', 1.6], ['Sw', 1.9]],...]
 				c_spc_count = {} # eg. {'P1':[{'BW':2, 'SW':1}, {}], 'P2': None ...} 
 				invalid_spc_codes = [] 
-				comments_dict = {'cluster':cluster['GeneralComment'], 'ecosite':cluster['CommentsEcosite']} # eg. {'cluster': '7 staff', 'P1': 'all residual trees', ... }
+				# comments_dict = {'cluster':cluster['GeneralComment'], 'ecosite':cluster['CommentsEcosite']} # eg. {'cluster': '7 staff', 'P1': 'all residual trees', ... }
+				comments_dict = {'cluster':cluster['GeneralComment'].replace("'",""), 'ecosite':cluster['CommentsEcosite'].replace("'","")} # eg. {'cluster': '7 staff', 'P1': 'all residual trees', ... }
 				photos_dict = {'cluster':cluster['ClusterPhoto']} # eg. {'cluster':'www.photos/03','P1':'www.photos/01|www.photos/02', 'P2':'',...}
 
 				# looping through each plot (1-8)

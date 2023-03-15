@@ -119,8 +119,11 @@ class To_browsers:
 		# replace the project id with an anchor tag.
 		for proj in self.active_projs:
 			path_to_project_html = os.path.join('proj',create_html_filename(proj)) # eg. proj\p_JVBonhomme.html
-			a_tag = '<a href="%s">%s</a>'%(path_to_project_html, proj)
-			html = html.replace(proj,a_tag)
+			a_tag = '<a href="%s">%s</a><'%(path_to_project_html, proj) # the reason why "<" is at the end: otherwise INVERGARRY_6 will replace INVERGARRY_69 as well.
+			html = html.replace(proj+'<',a_tag)
+
+			# a_tag = '<a href="%s">%s</a>'%(path_to_project_html, proj)
+			# html = html.replace(proj,a_tag)
 
 
 		# rewrite the index.html to include the table.
@@ -171,8 +174,11 @@ class To_browsers:
 		# replace the project id with an anchor tag.
 		for proj in self.active_projs:
 			path_to_project_html = r'proj\\' + create_html_filename(proj) # eg. proj\\p_JVBonhomme.html - note that for js, you need '\\'
-			a_tag = '<a href="%s">%s</a>'%(path_to_project_html, proj)
-			js_script = js_script.replace(proj,a_tag)
+			a_tag = '<strong><a href="%s">%s</a></strong>'%(path_to_project_html, proj)
+			to_be_replaced = '<strong>%s</strong>'%proj
+			js_script = js_script.replace(to_be_replaced,a_tag)			
+			# a_tag = '<a href="%s">%s</a>'%(path_to_project_html, proj) # delete this later
+			# js_script = js_script.replace(proj,a_tag) # delete this later
 
 		f.write(js_script)
 		f.close()
